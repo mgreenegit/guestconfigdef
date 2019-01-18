@@ -20,7 +20,7 @@ trigger:
 
 steps:
 - powershell: |
-    Update-Module 'AzureRM' -force
+    Install-Module 'Az' -force
   displayName: 'Update Azure PowerShell modules'
 
 - task: AzurePowerShell@3
@@ -40,7 +40,7 @@ steps:
         Policy         = "$(Build.SourcesDirectory)\Audit\GuestConfiguration_AdministratorAccountRename_Deploy.json"
         Parameter      = '{ "Renamed To:": { "type": "string" } }'
         }
-      $deployDef = New-AzureRMPolicyDefinition @deployIfNotExists
+      $deployDef = New-AzPolicyDefinition @deployIfNotExists
 
 - task: AzurePowerShell@3
   displayName: 'Publish audit definition'
@@ -57,7 +57,7 @@ steps:
         Mode           = 'Indexed'
         Policy         = "$(Build.SourcesDirectory)\Audit\GuestConfiguration_AdministratorAccountRename_Audit.json"
         }
-      $auditDef = New-AzureRMPolicyDefinition @auditIfNotExists
+      $auditDef = New-AzPolicyDefinition @auditIfNotExists
 
 - task: AzurePowerShell@3
   displayName: 'Publish initiative definition'
@@ -74,4 +74,4 @@ steps:
         PolicyDefinition = '$(Build.SourcesDirectory)\Audit\initiative.json'
         Parameter        = '{ "Renamed To:": { "type": "string" } }'
       }
-      $setDef = New-AzureRmPolicySetDefinition @policySet
+      $setDef = New-AzPolicySetDefinition @policySet
