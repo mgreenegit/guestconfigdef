@@ -1,0 +1,81 @@
+{
+    "properties": {
+        "displayName": "Audit that the local Administrator account is disabled inside Windows VMs",
+        "policyType": "BuiltIn",
+        "mode": "Indexed",
+        "description": "This policy will audit the local Administrator account is disabled inside Windows virtual machines. This policy should only be used along with its corresponding deploy policy in an initiative/policy set. For more information on guest configuration policies, please visit http://aka.ms/gcpol",
+        "metadata": {
+            "category": "Guest Configuration"
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Compute/virtualMachines"
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Compute/imagePublisher",
+                                        "equals": "MicrosoftWindowsServer"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageOffer",
+                                        "equals": "WindowsServer"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageSKU",
+                                        "in": [
+                                            "2012-Datacenter",
+                                            "2012-Datacenter-smalldisk",
+                                            "2012-R2-Datacenter",
+                                            "2012-R2-Datacenter-smalldisk",
+                                            "2016-Datacenter",
+                                            "2016-Datacenter-Server-Core",
+                                            "2016-Datacenter-Server-Core-smalldisk",
+                                            "2016-Datacenter-smalldisk",
+                                            "2016-Datacenter-with-Containers",
+                                            "2016-Datacenter-with-RDSH"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Compute/imagePublisher",
+                                        "equals": "MicrosoftSQLServer"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageOffer",
+                                        "equals": "SQL2017-WS2016"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageSKU",
+                                        "equals": "Enterprise"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "auditIfNotExists",
+                "details": {
+                    "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
+                    "name": "AdministratorAccountDisable",
+                    "existenceCondition": {
+                        "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+                        "equals": "Compliant"
+                    }
+                }
+            }
+        }
+    },
+    "id": "/providers/Microsoft.Authorization/policyDefinitions/8ac617c4-f818-4338-9836-9c61748aaf1c",
+    "name": "8ac617c4-f818-4338-9836-9c61748aaf1c"
+}

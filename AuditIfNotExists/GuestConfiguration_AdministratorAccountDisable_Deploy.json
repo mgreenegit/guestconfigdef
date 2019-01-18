@@ -1,0 +1,154 @@
+{
+    "properties": {
+        "displayName": "Deploy VM extension to audit the local Administrator account is disabled inside Windows VMs",
+        "policyType": "BuiltIn",
+        "mode": "Indexed",
+        "description": "Include this rule to deploy the VM extension for Microsoft Guest Configuration, the VM extension for Microsoft Azure Managed Service Identity, and the required content to audit the local Administrator account is disabled inside Windows virtual machines. This policy should only be used along with its corresponding audit policy in an initiative/policy set. For more information on guest configuration policies, please visit http://aka.ms/gcpol",
+        "metadata": {
+            "category": "Guest Configuration",
+            "requiredProviders": [
+                "Microsoft.GuestConfiguration"
+            ]
+        },
+        "policyRule": {
+            "if": {
+                "anyOf": [
+                    {
+                        "allOf": [
+                            {
+                                "field": "type",
+                                "equals": "Microsoft.Compute/virtualMachines"
+                            },
+                            {
+                                "allOf": [
+                                    {
+                                        "field": "Microsoft.Compute/imagePublisher",
+                                        "equals": "MicrosoftWindowsServer"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageOffer",
+                                        "equals": "WindowsServer"
+                                    },
+                                    {
+                                        "field": "Microsoft.Compute/imageSKU",
+                                        "in": [
+                                            "2012-Datacenter",
+                                            "2012-Datacenter-smalldisk",
+                                            "2012-R2-Datacenter",
+                                            "2012-R2-Datacenter-smalldisk",
+                                            "2016-Datacenter",
+                                            "2016-Datacenter-Server-Core",
+                                            "2016-Datacenter-Server-Core-smalldisk",
+                                            "2016-Datacenter-smalldisk",
+                                            "2016-Datacenter-with-Containers",
+                                            "2016-Datacenter-with-RDSH"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "allOf": [
+                            {
+                                "field": "Microsoft.Compute/imagePublisher",
+                                "equals": "MicrosoftSQLServer"
+                            },
+                            {
+                                "field": "Microsoft.Compute/imageOffer",
+                                "equals": "SQL2017-WS2016"
+                            },
+                            {
+                                "field": "Microsoft.Compute/imageSKU",
+                                "equals": "Enterprise"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "deployIfNotExists",
+                "details": {
+                    "type": "Microsoft.GuestConfiguration/guestConfigurationAssignments",
+                    "roleDefinitionIds": [
+                        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                    ],
+                    "name": "AdministratorAccountDisable",
+                    "deployment": {
+                        "properties": {
+                            "mode": "incremental",
+                            "parameters": {
+                                "vmName": {
+                                    "value": "[field('name')]"
+                                },
+                                "location": {
+                                    "value": "[field('location')]"
+                                },
+                                "configurationName": {
+                                    "value": "AdministratorAccountDisable"
+                                }
+                            },
+                            "template": {
+                                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                "contentVersion": "1.0.0.0",
+                                "parameters": {
+                                    "vmName": {
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "type": "string"
+                                    },
+                                    "configurationName": {
+                                        "type": "string"
+                                    }
+                                },
+                                "resources": [
+                                    {
+                                        "apiVersion": "2018-06-30-preview",
+                                        "type": "Microsoft.Compute/virtualMachines/providers/guestConfigurationAssignments",
+                                        "name": "[concat(parameters('vmName'), '/Microsoft.GuestConfiguration/', parameters('configurationName'))]",
+                                        "location": "[parameters('location')]",
+                                        "properties": {
+                                            "guestConfiguration": {
+                                                "name": "[parameters('configurationName')]",
+                                                "version": "1.*"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "apiVersion": "2017-03-30",
+                                        "type": "Microsoft.Compute/virtualMachines",
+                                        "identity": {
+                                            "type": "SystemAssigned"
+                                        },
+                                        "name": "[parameters('vmName')]",
+                                        "location": "[parameters('location')]"
+                                    },
+                                    {
+                                        "apiVersion": "2015-05-01-preview",
+                                        "name": "[concat(parameters('vmName'), '/AzurePolicyforWindows')]",
+                                        "type": "Microsoft.Compute/virtualMachines/extensions",
+                                        "location": "[parameters('location')]",
+                                        "properties": {
+                                            "publisher": "Microsoft.GuestConfiguration",
+                                            "type": "ConfigurationforWindows",
+                                            "typeHandlerVersion": "1.1",
+                                            "autoUpgradeMinorVersion": true,
+                                            "settings": {},
+                                            "protectedSettings": {}
+                                        },
+                                        "dependsOn": [
+                                            "[concat('Microsoft.Compute/virtualMachines/',parameters('vmName'),'/providers/Microsoft.GuestConfiguration/guestConfigurationAssignments/',parameters('configurationName'))]"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "id": "/providers/Microsoft.Authorization/policyDefinitions/b2c1fa92-14f5-431f-8f6a-85663edfa65c",
+    "name": "b2c1fa92-14f5-431f-8f6a-85663edfa65c"
+}
