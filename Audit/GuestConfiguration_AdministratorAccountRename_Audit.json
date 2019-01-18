@@ -1,34 +1,21 @@
 {
-    "properties": {
-        "displayName": "Audit that the administrator account has been renamed inside Windows VMs",
-        "policyType": "BuiltIn",
-        "mode": "all",
-        "description": "This policy will audit that the administrator account has been renamed inside Windows virtual machines. This policy should only be used along with its corresponding deploy policy in an initiative/policy set. For more information on guest configuration policies, please visit http://aka.ms/gcpol",
-        "metadata": {
-            "category": "Guest Configuration"
-        },
-        "policyRule": {
-            "if": {
-                "allOf": [
-                    {
-                        "field": "type",
-                        "equals": "Microsoft.GuestConfiguration/guestConfigurationAssignments"
-                    },
-                    {
-                        "field": "name",
-                        "equals": "AdministratorAccountRename"
-                    },
-                    {
-                        "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
-                        "notEquals": "Compliant"
-                    }
-                ]
+    "if": {
+        "allOf": [
+            {
+                "field": "type",
+                "equals": "Microsoft.GuestConfiguration/guestConfigurationAssignments"
             },
-            "then": {
-                "effect": "audit"
+            {
+                "field": "name",
+                "equals": "AdministratorAccountRename"
+            },
+            {
+                "field": "Microsoft.GuestConfiguration/guestConfigurationAssignments/complianceStatus",
+                "notEquals": "Compliant"
             }
-        }
+        ]
     },
-    "id": "/providers/Microsoft.Authorization/policyDefinitions/bf583306-3cb2-433c-af9c-94b7ea4df924",
-    "name": "bf583306-3cb2-433c-af9c-94b7ea4df924"
+    "then": {
+        "effect": "audit"
+    }
 }

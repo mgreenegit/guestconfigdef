@@ -1,0 +1,8 @@
+[
+    {
+        "policyDefinitionId": "/subscriptions/$(SubscriptionID)/providers/Microsoft.Authorization/policyDefinitions/bf583306-3cb2-433c-af9c-94b7ea4df924"
+    },
+    {
+        "policyDefinitionId": "/subscriptions/$(SubscriptionID)/providers/Microsoft.Authorization/policyDefinitions/2ecae36c-9e7f-491a-be83-6dfddf98052e"
+    }
+]

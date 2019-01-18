@@ -1,0 +1,77 @@
+pool: 'Hosted VS2017'
+
+variables:
+- group: 'azure'
+- name: 'major'
+  value: '1'
+- name: 'minor'
+  value: '0'
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - README.md
+    - LICENSE
+    - .gitignore
+    - .github/*
+
+steps:
+- powershell: |
+    Update-Module 'AzureRM' -force
+  displayName: 'Update Azure PowerShell modules'
+
+- task: AzurePowerShell@3
+  displayName: 'Publish deployifnotexists definition'
+  inputs:
+    azureSubscription: 'ARM'
+    azurePowerShellVersion: 'latestVersion'
+    scriptType: 'inlineScript'
+    inline: |
+      write-host 'Creating deployifnotexists definition'
+      $deployIfNotExists = @{
+        Name           = '2ecae36c-9e7f-491a-be83-6dfddf98052e'
+        DisplayName    = 'Deploy VM extension to audit that the administrator account has been renamed inside Windows VMs'
+        Description    = 'Include this rule to deploy the VM extension for Microsoft Guest Configuration, the VM extension for Microsoft Azure Managed Service Identity, and the required content to audit that the administrator account has been renamed inside Windows virtual machines. This policy should only be used along with its corresponding audit policy in an initiative/policy set. For more information on guest configuration policies, please visit http://aka.ms/gcpol'
+        SubscriptionId = '$(SubscriptionID)'
+        Mode           = 'Indexed'
+        Policy         = "$(Build.SourcesDirectory)\Audit\GuestConfiguration_AdministratorAccountRename_Deploy.json"
+        Parameter      = '{ "Renamed To:": { "type": "string" } }'
+        }
+      $deployDef = New-AzureRMPolicyDefinition @deployIfNotExists
+
+- task: AzurePowerShell@3
+  displayName: 'Publish audit definition'
+  inputs:
+    azureSubscription: 'ARM'
+    azurePowerShellVersion: 'latestVersion'
+    scriptType: 'inlineScript'
+    inline: |
+      $auditIfNotExists = @{
+        Name           = 'bf583306-3cb2-433c-af9c-94b7ea4df924'
+        DisplayName    = 'Audit that the administrator account has been renamed inside Windows VMs'
+        Description    = 'This policy will audit that the administrator account has been renamed inside Windows virtual machines. This policy should only be used along with its corresponding deploy policy in an initiative/policy set. For more information on guest configuration policies, please visit http://aka.ms/gcpol'
+        SubscriptionId = '$(SubscriptionID)'
+        Mode           = 'Indexed'
+        Policy         = "$(Build.SourcesDirectory)\Audit\GuestConfiguration_AdministratorAccountRename_Audit.json"
+        }
+      $auditDef = New-AzureRMPolicyDefinition @auditIfNotExists
+
+- task: AzurePowerShell@3
+  displayName: 'Publish initiative definition'
+  inputs:
+    azureSubscription: 'ARM'
+    azurePowerShellVersion: 'latestVersion'
+    scriptType: 'inlineScript'
+    inline: |
+      $policySet = @{
+        Name             = '61da8448-3e48-4e8a-95a3-83a97391ac5d'
+        DisplayName      = 'Audit settings related to administrator accounts in Windows Virtual Machines'
+        Description      = 'CI/CD solution for guest config validation.'
+        SubscriptionId   = '$(SubscriptionID)'
+        PolicyDefinition = '$(Build.SourcesDirectory)\Audit\initiative.json'
+        Parameter        = '{ "Renamed To:": { "type": "string" } }'
+      }
+      $setDef = New-AzureRmPolicySetDefinition @policySet
